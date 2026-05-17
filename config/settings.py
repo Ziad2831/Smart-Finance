@@ -108,6 +108,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 if os.environ.get('DATABASE_URL'):
     _db_url = urllib.parse.urlparse(os.environ['DATABASE_URL'])
+    _db_query = dict(urllib.parse.parse_qsl(_db_url.query))
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -116,6 +117,9 @@ if os.environ.get('DATABASE_URL'):
             'PASSWORD': _db_url.password,
             'HOST': _db_url.hostname,
             'PORT': _db_url.port or 5432,
+            'OPTIONS': {
+                'sslmode': _db_query.get('sslmode', 'require'),
+            },
         }
     }
 else:

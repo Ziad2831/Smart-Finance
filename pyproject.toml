@@ -13,4 +13,4 @@ dependencies = [
 entrypoint = "config.wsgi:application"
 
 [tool.vercel.scripts]
-build = "if [ -n \"$DATABASE_URL\" ]; then python manage.py migrate --noinput; fi"
+build = "python manage.py migrate --noinput || true"
