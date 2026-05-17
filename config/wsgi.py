@@ -31,7 +31,7 @@ def _migration_database_configured():
 
 
 _migrate_stamp = Path('/tmp/smart_finance_migrated')
-if _migration_database_configured() and not _migrate_stamp.exists():
+if os.environ.get('VERCEL') and not _migrate_stamp.exists():
     from django.core.management import call_command
 
     try:
