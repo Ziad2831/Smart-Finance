@@ -23,30 +23,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get(
-    'SECRET_KEY',
-    'django-insecure-ffc!mhd=@skm0ccoc5+t)-ozzk3+*22jagbp^52&q2if)cycph',
+    'DJANGO_SECRET_KEY',
+    os.environ.get(
+        'SECRET_KEY',
+        'django-insecure-ffc!mhd=@skm0ccoc5+t)-ozzk3+*22jagbp^52&q2if)cycph',
+    ),
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True').lower() in ('1', 'true', 'yes')
+_debug = os.environ.get('DJANGO_DEBUG', os.environ.get('DEBUG', '0'))
+DEBUG = _debug.lower() in ('1', 'true', 'yes')
 
-ALLOWED_HOSTS = [
-    host.strip()
-    for host in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
-    if host.strip()
-]
-ALLOWED_HOSTS.append('.vercel.app')
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.vercel.app']
 
 _vercel_url = os.environ.get('VERCEL_URL', '')
 if _vercel_url:
     ALLOWED_HOSTS.append(_vercel_url.replace('https://', '').replace('http://', ''))
 
-CSRF_TRUSTED_ORIGINS = [
-    origin.strip()
-    for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
-    if origin.strip()
-]
-CSRF_TRUSTED_ORIGINS.extend(['https://*.vercel.app'])
+CSRF_TRUSTED_ORIGINS = ['https://*.vercel.app']
 if _vercel_url:
     CSRF_TRUSTED_ORIGINS.append(
         _vercel_url if _vercel_url.startswith('http') else f'https://{_vercel_url}'

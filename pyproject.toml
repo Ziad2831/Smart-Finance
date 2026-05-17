@@ -8,5 +8,8 @@ dependencies = [
     "psycopg2-binary>=2.9.9",
 ]
 
+[tool.vercel]
+entrypoint = "config.wsgi:application"
+
 [tool.vercel.scripts]
-build = "python manage.py migrate --noinput"
+build = "if [ -n \"$DATABASE_URL\" ]; then python manage.py migrate --noinput; fi"
