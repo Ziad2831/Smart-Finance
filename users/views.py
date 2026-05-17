@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db import DatabaseError, IntegrityError
+from django.urls import reverse
 from .forms import RegisterForm, LoginForm
 
 
@@ -12,12 +14,18 @@ def register_view(request):
     Otherwise, processes the RegisterForm and logs in the new user upon success.
     """
     if request.user.is_authenticated:
-        return redirect('/budgets/dashboard/')
+        return redirect('dashboard')
     form = RegisterForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
-        user = form.save()
-        login(request, user)
-        return redirect('/budgets/dashboard/')
+        try:
+            user = form.save()
+            login(request, user)
+            return redirect('dashboard')
+        except (IntegrityError, DatabaseError):
+            messages.error(
+                request,
+                'Could not create account. Database may be unavailable — check Postgres on Vercel.',
+            )
     return render(request, 'users/register.html', {'form': form})
 
 
@@ -28,11 +36,14 @@ def login_view(request):
     via LoginForm and initiates a secure session.
     """
     if request.user.is_authenticated:
-        return redirect('/budgets/dashboard/')
-    form = LoginForm(request.POST or None)
+        return redirect('dashboard')
+    form = LoginForm(request.POST or None, request=request)
     if request.method == 'POST' and form.is_valid():
-        login(request, form.user)
-        return redirect('/budgets/dashboard/')
+        try:
+            login(request, form.user)
+            return redirect('dashboard')
+        except DatabaseError:
+            messages.error(request, 'Sign in failed. Database connection error.')
     return render(request, 'users/login.html', {'form': form})
 
 

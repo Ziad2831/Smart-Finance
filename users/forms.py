@@ -34,14 +34,19 @@ class LoginForm(forms.Form):
     email    = forms.EmailField()
     password = forms.CharField(widget=forms.PasswordInput)
 
+    def __init__(self, *args, request=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.request = request
+
     def clean(self):
         """
         Authenticates the user based on provided email and password.
         Raises a validation error if authentication fails.
         """
-        email    = self.cleaned_data.get('email')
-        password = self.cleaned_data.get('password')
-        self.user = authenticate(username=email, password=password)
+        cleaned = super().clean()
+        email = cleaned.get('email')
+        password = cleaned.get('password')
+        self.user = authenticate(request=self.request, email=email, password=password)
         if self.user is None:
-            raise forms.ValidationError("Invalid email or password. Please try again.")
-        return self.cleaned_data
+            raise forms.ValidationError('Invalid email or password. Please try again.')
+        return cleaned

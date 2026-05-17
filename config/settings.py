@@ -106,8 +106,23 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-if os.environ.get('DATABASE_URL'):
-    _db_url = urllib.parse.urlparse(os.environ['DATABASE_URL'])
+def _database_url():
+    for key in (
+        'POSTGRES_URL_NON_POOLING',
+        'DATABASE_URL',
+        'POSTGRES_URL',
+        'NEON_DATABASE_URL',
+    ):
+        value = os.environ.get(key)
+        if value:
+            return value
+    return None
+
+
+_DATABASE_URL = _database_url()
+
+if _DATABASE_URL:
+    _db_url = urllib.parse.urlparse(_DATABASE_URL)
     _db_query = dict(urllib.parse.parse_qsl(_db_url.query))
     DATABASES = {
         'default': {
@@ -117,11 +132,16 @@ if os.environ.get('DATABASE_URL'):
             'PASSWORD': _db_url.password,
             'HOST': _db_url.hostname,
             'PORT': _db_url.port or 5432,
+            'CONN_MAX_AGE': 0,
             'OPTIONS': {
                 'sslmode': _db_query.get('sslmode', 'require'),
             },
         }
     }
+elif os.environ.get('VERCEL'):
+    raise RuntimeError(
+        'Postgres is required on Vercel. Add Storage → Postgres and redeploy.'
+    )
 else:
     DATABASES = {
         'default': {
@@ -181,9 +201,17 @@ STORAGES = {
 WHITENOISE_USE_FINDERS = True
 
 AUTH_USER_MODEL = 'users.User'
+AUTHENTICATION_BACKENDS = [
+    'users.backends.EmailBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 LOGIN_URL = '/users/login/'
 LOGIN_REDIRECT_URL = '/budgets/dashboard/'
 LOGOUT_REDIRECT_URL = '/users/login/'
+
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_HTTPONLY = True
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
