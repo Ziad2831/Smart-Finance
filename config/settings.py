@@ -36,15 +36,24 @@ DEBUG = _debug.lower() in ('1', 'true', 'yes')
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.vercel.app']
 
-_vercel_url = os.environ.get('VERCEL_URL', '')
-if _vercel_url:
-    ALLOWED_HOSTS.append(_vercel_url.replace('https://', '').replace('http://', ''))
+for _env_key in ('VERCEL_URL', 'VERCEL_BRANCH_URL', 'VERCEL_PROJECT_PRODUCTION_URL'):
+    _host = os.environ.get(_env_key, '').replace('https://', '').replace('http://', '')
+    if _host and _host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_host)
+
+_extra_hosts = os.environ.get('ALLOWED_HOSTS', '')
+if _extra_hosts:
+    ALLOWED_HOSTS.extend(
+        host.strip() for host in _extra_hosts.split(',') if host.strip()
+    )
 
 CSRF_TRUSTED_ORIGINS = ['https://*.vercel.app']
-if _vercel_url:
-    CSRF_TRUSTED_ORIGINS.append(
-        _vercel_url if _vercel_url.startswith('http') else f'https://{_vercel_url}'
-    )
+for _env_key in ('VERCEL_URL', 'VERCEL_BRANCH_URL', 'VERCEL_PROJECT_PRODUCTION_URL'):
+    _origin = os.environ.get(_env_key, '')
+    if _origin:
+        CSRF_TRUSTED_ORIGINS.append(
+            _origin if _origin.startswith('http') else f'https://{_origin}'
+        )
 
 
 # Application definition
@@ -163,6 +172,9 @@ STORAGES = {
         'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
     },
 }
+
+# Serve CSS/JS from app folders if collectstatic did not run (e.g. local vercel dev)
+WHITENOISE_USE_FINDERS = True
 
 AUTH_USER_MODEL = 'users.User'
 LOGIN_URL = '/users/login/'
