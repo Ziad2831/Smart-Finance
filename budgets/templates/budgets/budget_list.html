@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Budgets — Smart Finance</title>
+  <link rel="stylesheet" href="{% static 'css/Base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/Dashboard.css' %}">
+  <script src="{% static 'js/theme.js' %}"></script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar__inner">
+      <a href="{% url 'dashboard' %}" class="navbar__logo">
+        <div class="navbar__logo-icon">SF</div>Smart Finance
+      </a>
+      <ul class="navbar__links">
+        <li><a href="{% url 'dashboard' %}"     class="navbar__link">Dashboard</a></li>
+        <li><a href="{% url 'transactions' %}"  class="navbar__link">Transactions</a></li>
+        <li><a href="{% url 'budget-list' %}"   class="navbar__link active">Budgets</a></li>
+        <li><a href="{% url 'budget-alerts' %}" class="navbar__link">Budget Alerts</a></li>
+        <li><a href="{% url 'goals' %}"         class="navbar__link">Savings Goals</a></li>
+        <li><a href="{% url 'reports' %}"       class="navbar__link">Reports</a></li>
+      </ul>
+      <div class="navbar__right">
+        <button class="theme-toggle" id="theme-toggle" title="Toggle Theme" >
+          <svg class="sun"  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+          <svg class="moon"  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+        </button>
+        <a href="{% url 'profile' %}" style="text-decoration: none; display: flex; align-items: center; gap: 8px;">
+          <div class="navbar__avatar">{{ user.full_name|slice:":2"|upper }}</div>
+          <span class="navbar__user-name">{{ user.full_name|truncatewords:1 }}</span>
+        </a>
+        <button class="navbar__toggle" id="mobile-menu-toggle">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="page-wrapper">
+    <header class="page-header">
+      <div class="page-header__text">
+        <h1>My Budgets</h1>
+        <p>Manage your monthly spending limits.</p>
+      </div>
+      <a href="{% url 'budget-create' %}" class="btn btn-primary">+ Add Budget</a>
+    </header>
+
+    <div class="content-box">
+      <h2>All Budgets</h2>
+      {% for b in budgets %}
+      <div class="transaction-item">
+        <div class="tx-info">
+          <h4>{{ b.category }}</h4>
+          <p>${{ b.spent_amount|floatformat:2 }} spent | Remaining: ${{ b.budget_amount|floatformat:2 }} — {{ b.get_status }}</p>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <a href="{% url 'budget-edit' b.pk %}"
+             style="font-size:.85rem;color:var(--primary);font-weight:600;">Edit</a>
+          <form method="POST" action="{% url 'budget-delete' b.pk %}" style="display:inline">
+            {% csrf_token %}
+            <button type="submit"
+                    style="font-size:.85rem;color:var(--danger);background:none;border:none;font-weight:600;cursor:pointer;"
+                    onclick="return confirm('Delete this budget?')">Delete</button>
+          </form>
+        </div>
+      </div>
+      {% empty %}
+      <p style="color:var(--text-muted);text-align:center;padding:32px;">
+        No budgets yet. <a href="{% url 'budget-create' %}" style="color:var(--primary);font-weight:600;">Create your first one</a>
+      </p>
+      {% endfor %}
+    </div>
+  </main>
+  <script>
+    const menuToggle = document.getElementById('mobile-menu-toggle');
+    const navLinks = document.querySelector('.navbar__links');
+
+    if (menuToggle && navLinks) {
+      menuToggle.addEventListener('click', () => {
+        menuToggle.classList.toggle('active');
+        navLinks.classList.toggle('active');
+      });
+    }
+  </script>
+</body>
+</html>
