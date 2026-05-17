@@ -1,4 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "django"
+  "framework": "django",
+  "installCommand": "pip install -r requirements.txt",
+  "buildCommand": "if [ -n \"$DATABASE_URL\" ]; then python manage.py migrate --noinput; fi"
 }
